@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="hub">
+  <h1>Welcome, {{ current_user.display_name }}</h1>
+  <p class="muted">
+    Phase 1 foundation is in place. The full hub will land module by module.
+  </p>
+  <ul class="module-grid">
+    <li class="module-tile module-tile--coming">
+      <h2>Loans</h2>
+      <p>Phase 2 — balances, amortization, drift detection, snowball vs avalanche.</p>
+    </li>
+    <li class="module-tile module-tile--coming">
+      <h2>Net worth</h2>
+      <p>Phase 3 — assets, monthly snapshots, trend chart.</p>
+    </li>
+    <li class="module-tile module-tile--coming">
+      <h2>Bills</h2>
+      <p>Phase 4 — recurring bill calendar and cashflow view.</p>
+    </li>
+    <li class="module-tile module-tile--coming">
+      <h2>Payoff what-if</h2>
+      <p>Phase 5 — scenario modeling on top of the loan amortization service.</p>
+    </li>
+    <li class="module-tile module-tile--coming">
+      <h2>Goals</h2>
+      <p>Phase 6 — savings goals.</p>
+    </li>
+    <li class="module-tile module-tile--coming">
+      <h2>Subscriptions</h2>
+      <p>Phase 6 — recurring subscription tracker.</p>
+    </li>
+  </ul>
+</section>
+{% endblock %}

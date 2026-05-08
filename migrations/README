@@ -1,0 +1,7 @@
+Alembic migrations managed via Flask-Migrate.
+
+Create a new revision after editing models:
+  flask --app wsgi:app db migrate -m "describe change"
+
+Apply pending migrations:
+  flask --app wsgi:app db upgrade
