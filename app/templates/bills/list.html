@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Bills · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Bills</h1>
+    <div>
+      <a class="btn" href="{{ url_for('bills.cashflow') }}">Cashflow view</a>
+      <a class="btn btn--primary" href="{{ url_for('bills.new_bill') }}">+ New bill</a>
+    </div>
+  </div>
+  {% if not bills %}
+    <p class="muted">No bills yet.</p>
+  {% else %}
+    <table class="schedule">
+      <thead><tr><th>Name</th><th>Amount</th><th>Recurrence</th><th>Next due</th><th>Autopay</th><th></th></tr></thead>
+      <tbody>
+        {% for bill in bills %}
+          <tr class="{% if bill.next_due_date < today %}overdue{% endif %}">
+            <td><a href="{{ url_for('bills.edit_bill', bill_id=bill.id) }}">{{ bill.name }}</a></td>
+            <td>${{ '{:,.2f}'.format(bill.amount) }}</td>
+            <td>{{ bill.recurrence.value }}</td>
+            <td>{{ bill.next_due_date }}</td>
+            <td>{{ '✓' if bill.autopay else '' }}</td>
+            <td>
+              <form method="post" action="{{ url_for('bills.mark_paid', bill_id=bill.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="link-button">Mark paid</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

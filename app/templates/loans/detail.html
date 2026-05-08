@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ loan.name }} · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <div>
+      <h1>{{ loan.name }}</h1>
+      <p class="muted">{{ loan.lender or '' }} · {{ loan.loan_type.value }} · {{ loan.status.value }}</p>
+    </div>
+    <div>
+      <a class="btn" href="{{ url_for('loans.log_balance', loan_id=loan.id) }}">Log balance</a>
+      <a class="btn" href="{{ url_for('loans.manage_extras', loan_id=loan.id) }}">Extras</a>
+      <a class="btn" href="{{ url_for('loans.edit_loan', loan_id=loan.id) }}">Edit</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><span>Payoff date</span><strong>{{ schedule.payoff_date or '—' }}</strong></div>
+    <div class="stat"><span>Months remaining</span><strong>{{ schedule.months_to_payoff }}</strong></div>
+    <div class="stat"><span>Total interest</span><strong>${{ '{:,.2f}'.format(schedule.total_interest) }}</strong></div>
+    <div class="stat"><span>Total paid</span><strong>${{ '{:,.2f}'.format(schedule.total_paid) }}</strong></div>
+  </div>
+
+  {% if drift %}
+    <div class="drift drift--{{ drift.severity }}">
+      <strong>Drift: {{ drift.severity }}</strong>
+      Logged ${{ '{:,.2f}'.format(drift.logged) }} vs predicted ${{ '{:,.2f}'.format(drift.predicted) }}
+      (Δ ${{ '{:,.2f}'.format(drift.delta) }})
+      {% if drift.severity == 'red' %}
+        <form method="post" action="{{ url_for('loans.recalibrate', loan_id=loan.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn--primary">Recalibrate from current balance</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <h2>Balance history</h2>
+  <canvas id="balance-chart" height="120"
+          data-predicted='{{ predicted_series|tojson }}'
+          data-history='{{ history_series|tojson }}'></canvas>
+
+  <h2>Schedule</h2>
+  <table class="schedule">
+    <thead>
+      <tr><th>#</th><th>Date</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Balance</th></tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.period }}</td>
+          <td>{{ r.due_date }}</td>
+          <td>${{ '{:,.2f}'.format(r.payment) }}</td>
+          <td>${{ '{:,.2f}'.format(r.principal) }}</td>
+          <td>${{ '{:,.2f}'.format(r.interest) }}</td>
+          <td>{% if r.extra > 0 %}${{ '{:,.2f}'.format(r.extra) }}{% endif %}</td>
+          <td>${{ '{:,.2f}'.format(r.balance) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pages > 1 %}
+    <nav class="pager">
+      {% if page > 1 %}<a href="?page={{ page - 1 }}">‹ Prev</a>{% endif %}
+      <span>Page {{ page }} of {{ pages }}</span>
+      {% if page < pages %}<a href="?page={{ page + 1 }}">Next ›</a>{% endif %}
+    </nav>
+  {% endif %}
+</section>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+{% endblock %}

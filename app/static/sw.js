@@ -6,7 +6,7 @@
 //
 // Bump CACHE_VERSION to force clients to refresh cached assets.
 
-const CACHE_VERSION = "v1-2026-05-08";
+const CACHE_VERSION = "v2-2026-05-08";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -14,6 +14,7 @@ const SHELL_ASSETS = [
   "/offline",
   "/static/css/app.css",
   "/static/js/app.js",
+  "/static/js/charts.js",
   "/static/icons/icon-192.svg",
   "/static/icons/icon-512.svg",
   "/manifest.webmanifest",

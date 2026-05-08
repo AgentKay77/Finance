@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if sub else 'New' }} subscription{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ 'Edit' if sub else 'New' }} subscription</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.name, form.amount, form.billing_cycle, form.next_renewal_date, form.category] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+      </label>
+    {% endfor %}
+    <label class="full">
+      <span>{{ form.notes.label.text }}</span>
+      {{ form.notes(rows=3) }}
+    </label>
+    <div class="full row-between">
+      <a href="{{ url_for('subscriptions.list_subs') }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  </form>
+  {% if sub %}
+    <form method="post" action="{{ url_for('subscriptions.delete_sub', sub_id=sub.id) }}"
+          onsubmit="return confirm('Delete this subscription?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn--danger">Delete</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ loan.name }} · what-if{% endblock %}
+{% block content %}
+<section>
+  <h1>What-if: {{ loan.name }}</h1>
+  <p class="muted">
+    Baseline: {{ baseline.months_to_payoff }} months, total interest
+    ${{ '{:,.2f}'.format(baseline.total_interest) }}.
+  </p>
+
+  <form method="post" class="card form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <label>
+      <span>Extra monthly payment</span>
+      <input type="number" name="extra_monthly" step="0.01" min="0" placeholder="0.00" />
+    </label>
+    <label>
+      <span>One-time lump amount</span>
+      <input type="number" name="one_time_amount" step="0.01" min="0" placeholder="0.00" />
+    </label>
+    <label>
+      <span>One-time lump date</span>
+      <input type="date" name="one_time_date" />
+    </label>
+    <label>
+      <span>Rate override (e.g. 0.045)</span>
+      <input type="number" name="rate_override" step="0.0001" min="0" max="1" />
+    </label>
+    <label>
+      <span>Rate override date</span>
+      <input type="date" name="rate_override_date" />
+    </label>
+    <div class="full row-between">
+      <a href="{{ url_for('whatif.index') }}">← Back</a>
+      <button type="submit" class="btn btn--primary">Run scenarios</button>
+    </div>
+  </form>
+
+  {% if results %}
+    <h2>Results vs baseline</h2>
+    <table class="schedule">
+      <thead><tr><th>Scenario</th><th>Months saved</th><th>Interest saved</th><th>Total interest</th><th>Payoff date</th></tr></thead>
+      <tbody>
+        {% for r in results %}
+          <tr>
+            <td>{{ r.label }}</td>
+            <td>{{ r.months_saved }}</td>
+            <td>${{ '{:,.2f}'.format(r.interest_saved) }}</td>
+            <td>${{ '{:,.2f}'.format(r.schedule.total_interest) }}</td>
+            <td>{{ r.schedule.payoff_date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

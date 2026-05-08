@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if bill else 'New' }} bill · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ 'Edit' if bill else 'New' }} bill</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.name, form.amount, form.recurrence, form.next_due_date,
+                     form.end_date, form.autopay, form.category] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+      </label>
+    {% endfor %}
+    <label class="full">
+      <span>{{ form.notes.label.text }}</span>
+      {{ form.notes(rows=3) }}
+    </label>
+    <div class="full row-between">
+      <a href="{{ url_for('bills.list_bills') }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  </form>
+  {% if bill %}
+    <form method="post" action="{{ url_for('bills.delete_bill', bill_id=bill.id) }}"
+          onsubmit="return confirm('Delete this bill?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn--danger">Delete</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

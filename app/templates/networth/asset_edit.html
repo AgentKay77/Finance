@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if asset else 'New' }} asset · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ 'Edit' if asset else 'New' }} asset</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.name, form.asset_type, form.current_value, form.as_of_date] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+      </label>
+    {% endfor %}
+    <label class="full">
+      <span>{{ form.notes.label.text }}</span>
+      {{ form.notes(rows=3) }}
+    </label>
+    <div class="full row-between">
+      <a href="{{ url_for('networth.list_assets') }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  </form>
+  {% if asset %}
+    <form method="post" action="{{ url_for('networth.delete_asset', asset_id=asset.id) }}"
+          onsubmit="return confirm('Delete this asset?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn--danger">Delete</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

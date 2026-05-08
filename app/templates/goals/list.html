@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Goals · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Savings goals</h1>
+    <a class="btn btn--primary" href="{{ url_for('goals.new_goal') }}">+ New goal</a>
+  </div>
+  {% if not goals %}
+    <p class="muted">No goals yet.</p>
+  {% else %}
+    <ul class="goal-list">
+      {% for g in goals %}
+        {% set pct = (g.current_amount / g.target_amount * 100) if g.target_amount > 0 else 0 %}
+        <li class="card">
+          <div class="row-between">
+            <div>
+              <h2>{{ g.name }}</h2>
+              <p class="muted">
+                ${{ '{:,.2f}'.format(g.current_amount) }} / ${{ '{:,.2f}'.format(g.target_amount) }}
+                {% if g.target_date %} · by {{ g.target_date }}{% endif %}
+              </p>
+            </div>
+            <a href="{{ url_for('goals.edit_goal', goal_id=g.id) }}">Edit</a>
+          </div>
+          <div class="progress"><span style="width: {{ '%.1f' % pct }}%"></span></div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

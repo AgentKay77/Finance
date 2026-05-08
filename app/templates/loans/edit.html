@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if loan else 'New' }} loan · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ 'Edit' if loan else 'New' }} loan</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.name, form.lender, form.loan_type, form.original_principal,
+                     form.current_rate, form.original_term_months, form.payment_amount,
+                     form.first_payment_date, form.payment_day_of_month, form.status] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+        {% for err in field.errors %}<small class="error">{{ err }}</small>{% endfor %}
+      </label>
+    {% endfor %}
+    <label class="full">
+      <span>{{ form.notes.label.text }}</span>
+      {{ form.notes(rows=3) }}
+    </label>
+    <div class="full row-between">
+      <a href="{{ url_for('loans.list_loans') }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  </form>
+  {% if loan %}
+    <form method="post" action="{{ url_for('loans.delete_loan', loan_id=loan.id) }}"
+          onsubmit="return confirm('Delete this loan and all its history?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn--danger">Delete loan</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

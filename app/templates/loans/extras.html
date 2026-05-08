@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Extras · {{ loan.name }}{% endblock %}
+{% block content %}
+<section>
+  <h1>Extra payments — {{ loan.name }}</h1>
+
+  {% if loan.extra_payments %}
+    <table class="schedule">
+      <thead><tr><th>Type</th><th>Amount</th><th>Start</th><th>End</th><th>Frequency</th><th></th></tr></thead>
+      <tbody>
+        {% for ep in loan.extra_payments %}
+          <tr>
+            <td>{{ ep.payment_type.value }}</td>
+            <td>${{ ep.amount }}</td>
+            <td>{{ ep.start_date }}</td>
+            <td>{{ ep.end_date or '—' }}</td>
+            <td>{{ ep.frequency.value if ep.frequency else '—' }}</td>
+            <td>
+              <form method="post" action="{{ url_for('loans.delete_extra', loan_id=loan.id, extra_id=ep.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="link-button">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No extra payments yet.</p>
+  {% endif %}
+
+  <section class="card">
+    <h2>Add extra payment</h2>
+    <form method="post" class="form-grid">
+      {{ form.hidden_tag() }}
+      {% for field in [form.payment_type, form.amount, form.start_date, form.end_date, form.frequency, form.notes] %}
+        <label>
+          <span>{{ field.label.text }}</span>
+          {{ field() }}
+        </label>
+      {% endfor %}
+      <div class="full row-between">
+        <a href="{{ url_for('loans.detail', loan_id=loan.id) }}">Back to loan</a>
+        <button type="submit" class="btn btn--primary">Add</button>
+      </div>
+    </form>
+  </section>
+</section>
+{% endblock %}

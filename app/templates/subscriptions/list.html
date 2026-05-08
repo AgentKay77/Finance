@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Subscriptions · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Subscriptions</h1>
+    <a class="btn btn--primary" href="{{ url_for('subscriptions.new_sub') }}">+ New</a>
+  </div>
+  <div class="stat-grid">
+    <div class="stat"><span>Per month (est.)</span><strong>${{ '{:,.2f}'.format(monthly_total) }}</strong></div>
+    <div class="stat"><span>Per year (est.)</span><strong>${{ '{:,.2f}'.format(annual_total) }}</strong></div>
+  </div>
+  {% if not subs %}
+    <p class="muted">No subscriptions tracked.</p>
+  {% else %}
+    <table class="schedule">
+      <thead><tr><th>Name</th><th>Amount</th><th>Cycle</th><th>Next renewal</th><th>Category</th><th></th></tr></thead>
+      <tbody>
+        {% for s in subs %}
+          <tr class="{% if s.next_renewal_date < today %}overdue{% endif %}">
+            <td><a href="{{ url_for('subscriptions.edit_sub', sub_id=s.id) }}">{{ s.name }}</a></td>
+            <td>${{ '{:,.2f}'.format(s.amount) }}</td>
+            <td>{{ s.billing_cycle.value }}</td>
+            <td>{{ s.next_renewal_date }}</td>
+            <td>{{ s.category or '' }}</td>
+            <td>
+              <form method="post" action="{{ url_for('subscriptions.renewed', sub_id=s.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="link-button">Renewed</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

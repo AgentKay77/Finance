@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Snowball vs Avalanche · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <h1>Payoff strategy comparison</h1>
+  <form method="post" class="card form-inline">
+    {{ form.hidden_tag() }}
+    <label>
+      <span>Monthly extra budget</span>
+      {{ form.monthly_extra_budget() }}
+    </label>
+    <button type="submit" class="btn btn--primary">Compare</button>
+  </form>
+
+  {% if comparison %}
+    <div class="strategy-grid">
+      {% for strat in [comparison.snowball, comparison.avalanche] %}
+        <div class="card">
+          <h2>{{ strat.name }}</h2>
+          <p>{{ strat.months_to_debt_free }} months to debt-free</p>
+          <p>Total interest: ${{ '{:,.2f}'.format(strat.total_interest) }}</p>
+          <p>Saved vs minimums: ${{ '{:,.2f}'.format(strat.interest_savings_vs_baseline) }}</p>
+          <h3>Payoff order</h3>
+          <ol>
+            {% for loan_id, paid_off in strat.payoff_order %}
+              <li>Loan #{{ loan_id }} → {{ paid_off }}</li>
+            {% endfor %}
+          </ol>
+        </div>
+      {% endfor %}
+    </div>
+    <h2>Combined balance over time</h2>
+    <canvas id="strategy-chart" height="120"
+      data-snowball='{{ comparison.snowball.monthly_balance_total|map('list')|list|tojson }}'
+      data-avalanche='{{ comparison.avalanche.monthly_balance_total|map('list')|list|tojson }}'></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+  {% endif %}
+</section>
+{% endblock %}
