@@ -1,0 +1,23 @@
+# LAN-only TLS via Caddy's internal CA. Replace `finance.lan` with whatever
+# hostname you've set up in your local DNS / hosts file. When you eventually
+# expose this through WireGuard, point a real hostname here and switch
+# `tls internal` to a regular ACME directive.
+
+finance.lan {
+    tls internal
+
+    encode zstd gzip
+
+    # Service worker must not be cached at the proxy.
+    @sw path /sw.js /manifest.webmanifest
+    header @sw Cache-Control "no-cache"
+
+    # Static assets get long-lived caching; bump CACHE_VERSION in sw.js to bust.
+    @static path /static/*
+    header @static Cache-Control "public, max-age=604800"
+
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-For {remote_host}
+    }
+}
