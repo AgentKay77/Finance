@@ -40,9 +40,11 @@
     <span class="muted small">Default view: last 12 months.</span>
     <button id="balance-chart-toggle" class="link-button" type="button">Show full history</button>
   </div>
-  <canvas id="balance-chart" height="140"
-          data-predicted='{{ predicted_series|tojson }}'
-          data-history='{{ history_series|tojson }}'></canvas>
+  <div class="chart-wrap">
+    <canvas id="balance-chart"
+            data-predicted='{{ predicted_series|tojson }}'
+            data-history='{{ history_series|tojson }}'></canvas>
+  </div>
 
   <h2>Schedule</h2>
   <table class="schedule">
