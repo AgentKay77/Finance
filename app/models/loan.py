@@ -76,6 +76,18 @@ class Loan(UserOwnedMixin, TimestampMixin, Base):
     )
     notes: Mapped[str | None] = mapped_column(Text)
 
+    # Day count convention for interest accrual. "actual/360" (default) treats
+    # every elapsed calendar day as 1/360 of a year. "30/360" is the bond-math
+    # convention. Only these two are recognised by the amortization service.
+    day_count_convention: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="30/360", default="30/360"
+    )
+
+    # Set by the "recalibrate from current balance" action so future schedule
+    # builds start from this observed balance instead of original principal.
+    recalibration_balance: Mapped[Decimal | None] = mapped_column(_MONEY)
+    recalibration_date: Mapped[date | None] = mapped_column(Date)
+
     balance_logs: Mapped[list[BalanceLog]] = relationship(
         back_populates="loan", cascade="all, delete-orphan"
     )

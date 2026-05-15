@@ -31,6 +31,7 @@ from app.services.amortization import (
     RateChangeInput,
     build_schedule,
     detect_drift,
+    drift_band_dollars,
     predict_balance_at,
 )
 from app.services.payoff_strategies import StrategyLoan, compare_strategies
@@ -47,14 +48,26 @@ def _get_loan_or_404(loan_id: int) -> Loan:
     return loan
 
 
-def _to_terms(loan: Loan, starting_balance: Decimal | None = None) -> LoanTerms:
+def _to_terms(loan: Loan) -> LoanTerms:
     return LoanTerms(
         principal=Decimal(loan.original_principal),
         annual_rate=Decimal(loan.current_rate),
         term_months=loan.original_term_months,
         payment_amount=Decimal(loan.payment_amount),
         first_payment_date=loan.first_payment_date,
+        day_count_convention=loan.day_count_convention or "30/360",
     )
+
+
+def _build(loan: Loan):
+    """Build the loan's schedule honouring any recalibration anchor."""
+    kwargs = {}
+    if loan.recalibration_balance is not None and loan.recalibration_date is not None:
+        kwargs = {
+            "starting_balance": Decimal(loan.recalibration_balance),
+            "starting_date": loan.recalibration_date,
+        }
+    return build_schedule(_to_terms(loan), _extras_for(loan), _rate_changes_for(loan), **kwargs)
 
 
 def _extras_for(loan: Loan) -> list[ExtraPaymentInput]:
@@ -79,7 +92,7 @@ def _rate_changes_for(loan: Loan) -> list[RateChangeInput]:
 
 def _current_balance(loan: Loan) -> tuple[Decimal, str]:
     """Return (balance, severity-or-source) for the most recent state."""
-    schedule = build_schedule(_to_terms(loan), _extras_for(loan), _rate_changes_for(loan))
+    schedule = _build(loan)
     latest_log = max(loan.balance_logs, key=lambda b: b.as_of_date, default=None)
     if latest_log is None:
         predicted_today = predict_balance_at(schedule, date.today())
@@ -143,7 +156,7 @@ def new_loan() -> str:
 @login_required
 def detail(loan_id: int) -> str:
     loan = _get_loan_or_404(loan_id)
-    schedule = build_schedule(_to_terms(loan), _extras_for(loan), _rate_changes_for(loan))
+    schedule = _build(loan)
     page = max(1, int(request.args.get("page", 1)))
     per_page = 60
     total_rows = len(schedule.rows)
@@ -154,8 +167,19 @@ def detail(loan_id: int) -> str:
         [(b.as_of_date, Decimal(b.balance)) for b in loan.balance_logs],
         key=lambda t: t[0],
     )
-    predicted_series = [(r.due_date.isoformat(), str(r.balance)) for r in schedule.rows[::3]]
-    history_series = [(d.isoformat(), str(b)) for d, b in history]
+    # Emit one predicted point per month (denser than every 3 months) so
+    # the line is smooth without inflating payload size.
+    predicted_series = [
+        {
+            "date": r.due_date.isoformat(),
+            "balance": str(r.balance),
+            # Yellow / red drift band widths around this predicted value.
+            "yellow": str(drift_band_dollars(r.balance)[0]),
+            "red": str(drift_band_dollars(r.balance)[1]),
+        }
+        for r in schedule.rows
+    ]
+    history_series = [{"date": d.isoformat(), "balance": str(b)} for d, b in history]
 
     drift = None
     if history:
@@ -250,6 +274,11 @@ def recalibrate(loan_id: int) -> str:
 
     new_payment = fixed_payment(Decimal(latest.balance), Decimal(loan.current_rate), remaining_term)
     loan.payment_amount = new_payment
+    # Persist the recalibration anchor so the schedule rebuilds from the
+    # observed balance instead of original principal. This is what flips
+    # the drift badge back to green after the user clicks the button.
+    loan.recalibration_balance = Decimal(latest.balance)
+    loan.recalibration_date = latest.as_of_date
     db.session.commit()
     flash(f"Recalibrated. New payment: ${new_payment}", "success")
     return redirect(url_for("loans.detail", loan_id=loan.id))

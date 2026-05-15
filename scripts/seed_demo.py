@@ -20,6 +20,8 @@ from app.models import (
     Bill,
     BillingCycle,
     BillRecurrence,
+    BudgetCategory,
+    BudgetTransaction,
     ExtraPayment,
     ExtraPaymentFrequency,
     ExtraPaymentType,
@@ -28,6 +30,7 @@ from app.models import (
     LoanType,
     SavingsGoal,
     Subscription,
+    TransactionSource,
     User,
 )
 from app.models.asset import AssetType
@@ -224,6 +227,75 @@ def main() -> int:
                     next_renewal_date=date(2026, 11, 4),
                     category="Tools",
                 ),
+            ]
+        )
+
+        # --- Budget categories + sample transactions ---
+        today = date.today()
+        first_of_month = today.replace(day=1)
+        groceries = BudgetCategory(
+            user_id=user.id,
+            name="Groceries",
+            monthly_limit=Decimal("600"),
+            color="#38bdf8",
+            sort_order=0,
+        )
+        dining = BudgetCategory(
+            user_id=user.id,
+            name="Dining Out",
+            monthly_limit=Decimal("250"),
+            color="#facc15",
+            sort_order=1,
+        )
+        gas = BudgetCategory(
+            user_id=user.id,
+            name="Gas",
+            monthly_limit=Decimal("180"),
+            color="#4ade80",
+            sort_order=2,
+        )
+        subs_misc = BudgetCategory(
+            user_id=user.id,
+            name="Subscriptions Misc",
+            monthly_limit=Decimal("60"),
+            color="#a78bfa",
+            sort_order=3,
+        )
+        home_maint = BudgetCategory(
+            user_id=user.id,
+            name="Home Maintenance",
+            monthly_limit=Decimal("200"),
+            color="#fb923c",
+            sort_order=4,
+        )
+        db.session.add_all([groceries, dining, gas, subs_misc, home_maint])
+        db.session.flush()
+
+        def _txn(cat: BudgetCategory, amount: str, day_offset: int, note: str | None = None):
+            return BudgetTransaction(
+                user_id=user.id,
+                category_id=cat.id,
+                amount=Decimal(amount),
+                date=first_of_month.replace(day=min(28, max(1, day_offset))),
+                note=note,
+                source=TransactionSource.MANUAL,
+            )
+
+        db.session.add_all(
+            [
+                _txn(groceries, "94.27", 3, "Costco run"),
+                _txn(groceries, "62.10", 5, "Trader Joe's"),
+                _txn(groceries, "138.55", 10, "Costco bulk"),
+                _txn(groceries, "44.80", 14, "Local market"),
+                _txn(dining, "62.40", 4, "Sushi"),
+                _txn(dining, "28.00", 8, "Pizza night"),
+                _txn(dining, "104.55", 12, "Anniversary dinner"),
+                _txn(gas, "48.10", 2, "Shell"),
+                _txn(gas, "52.00", 11, "Costco gas"),
+                _txn(subs_misc, "9.99", 1, "Newsletter"),
+                _txn(subs_misc, "19.99", 6, "Streaming bonus"),
+                _txn(home_maint, "85.00", 9, "HVAC filter"),
+                _txn(home_maint, "42.50", 13, "Light bulbs"),
             ]
         )
 

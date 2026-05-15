@@ -7,6 +7,7 @@ so Alembic autogeneration can see them.
 from app.models.asset import Asset, NetWorthSnapshot
 from app.models.base import Base, TimestampMixin
 from app.models.bill import Bill, BillRecurrence
+from app.models.budget import BudgetCategory, BudgetTransaction, TransactionSource
 from app.models.goal import SavingsGoal
 from app.models.loan import (
     BalanceLog,
@@ -30,6 +31,9 @@ __all__ = [
     "Bill",
     "BillRecurrence",
     "BillingCycle",
+    "BudgetCategory",
+    "BudgetTransaction",
+    "TransactionSource",
     "ExtraPayment",
     "ExtraPaymentFrequency",
     "ExtraPaymentType",

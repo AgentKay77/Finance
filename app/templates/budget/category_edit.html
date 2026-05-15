@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if category else 'New' }} category · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ 'Edit' if category else 'New' }} category</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.name, form.monthly_limit, form.color, form.sort_order] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+        {% for err in field.errors %}<small class="error">{{ err }}</small>{% endfor %}
+      </label>
+    {% endfor %}
+    <div class="full row-between">
+      <a href="{{ url_for('budget.list_categories') }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Save</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

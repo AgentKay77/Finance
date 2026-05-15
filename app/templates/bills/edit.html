@@ -6,7 +6,8 @@
   <form method="post" class="form-grid">
     {{ form.hidden_tag() }}
     {% for field in [form.name, form.amount, form.recurrence, form.next_due_date,
-                     form.end_date, form.autopay, form.category] %}
+                     form.end_date, form.autopay, form.category,
+                     form.default_budget_category_id] %}
       <label>
         <span>{{ field.label.text }}</span>
         {{ field() }}

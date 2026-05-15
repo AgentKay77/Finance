@@ -18,6 +18,19 @@
       <p>{{ bills_due_soon|length }} due in next 30 days</p>
     </li>
     <li class="module-tile">
+      <a href="{{ url_for('budget.home') }}"><h2>Budget</h2></a>
+      {% if budget_has_categories %}
+        <p>${{ '{:,.2f}'.format(budget_summary.total_spent) }} of ${{ '{:,.2f}'.format(budget_summary.total_limit) }} this month</p>
+        <p>
+          <span class="status-badge status-{{ 'red' if budget_summary.categories_over_pace >= 3 else 'yellow' if budget_summary.categories_over_pace >= 1 else 'green' }}">
+            {{ budget_summary.categories_over_pace }} over pace
+          </span>
+        </p>
+      {% else %}
+        <p>Set up categories to track spending.</p>
+      {% endif %}
+    </li>
+    <li class="module-tile">
       <a href="{{ url_for('whatif.index') }}"><h2>Payoff what-if</h2></a>
       <p>Model extra payments and refis</p>
     </li>

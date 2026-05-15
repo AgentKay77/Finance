@@ -6,15 +6,37 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
-from flask import Blueprint, abort, flash, redirect, render_template, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from app.blueprints.bills.forms import BillForm
 from app.extensions import db
-from app.models import Bill, Loan, current_user_id, current_user_query
+from app.models import (
+    Bill,
+    BudgetCategory,
+    BudgetTransaction,
+    Loan,
+    TransactionSource,
+    current_user_id,
+    current_user_query,
+)
 from app.models.bill import BillRecurrence
 from app.services.amortization import _add_months
 from app.services.recurrence import advance_due_date, next_occurrences
+
+
+def _budget_category_choices() -> list[tuple[str, str]]:
+    """Choices for the bill's default-budget-category dropdown.
+
+    Blank option means 'don't auto-create a transaction'.
+    """
+    cats = (
+        db.session.execute(current_user_query(BudgetCategory).order_by(BudgetCategory.name))
+        .scalars()
+        .all()
+    )
+    return [("", "— none —")] + [(str(c.id), c.name) for c in cats]
+
 
 bp = Blueprint("bills", __name__, url_prefix="/bills", template_folder="../../templates/bills")
 
@@ -73,6 +95,7 @@ def cashflow() -> str:
 @login_required
 def new_bill() -> str:
     form = BillForm()
+    form.default_budget_category_id.choices = _budget_category_choices()
     if form.validate_on_submit():
         bill = Bill(
             user_id=current_user_id(),
@@ -83,6 +106,7 @@ def new_bill() -> str:
             end_date=form.end_date.data,
             autopay=form.autopay.data,
             category=form.category.data or None,
+            default_budget_category_id=form.default_budget_category_id.data or None,
             notes=form.notes.data or None,
         )
         db.session.add(bill)
@@ -101,6 +125,9 @@ def edit_bill(bill_id: int) -> str:
     if bill is None:
         abort(404)
     form = BillForm(obj=bill)
+    form.default_budget_category_id.choices = _budget_category_choices()
+    if request.method == "GET":
+        form.default_budget_category_id.data = bill.default_budget_category_id or None
     if form.validate_on_submit():
         bill.name = form.name.data
         bill.amount = form.amount.data
@@ -109,6 +136,7 @@ def edit_bill(bill_id: int) -> str:
         bill.end_date = form.end_date.data
         bill.autopay = form.autopay.data
         bill.category = form.category.data or None
+        bill.default_budget_category_id = form.default_budget_category_id.data or None
         bill.notes = form.notes.data or None
         db.session.commit()
         flash("Bill updated.", "success")
@@ -124,7 +152,29 @@ def mark_paid(bill_id: int) -> str:
     ).scalar_one_or_none()
     if bill is None:
         abort(404)
+    paid_date = bill.next_due_date
     bill.next_due_date = advance_due_date(bill.next_due_date, bill.recurrence.value)
+
+    # Auto-create a budget transaction if the bill is wired to a category.
+    if bill.default_budget_category_id is not None:
+        # Confirm the category still belongs to this user (FK has
+        # ON DELETE SET NULL so this could be stale).
+        cat = db.session.execute(
+            current_user_query(BudgetCategory).where(
+                BudgetCategory.id == bill.default_budget_category_id
+            )
+        ).scalar_one_or_none()
+        if cat is not None:
+            db.session.add(
+                BudgetTransaction(
+                    user_id=current_user_id(),
+                    category_id=cat.id,
+                    amount=bill.amount,
+                    date=paid_date,
+                    note=bill.name,
+                    source=TransactionSource.AUTO_BILL,
+                )
+            )
     db.session.commit()
     flash(f"Marked '{bill.name}' paid; next due {bill.next_due_date}.", "success")
     return redirect(url_for("bills.list_bills"))

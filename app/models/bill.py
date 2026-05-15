@@ -6,7 +6,7 @@ import enum
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, Enum, Numeric, String
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin
@@ -39,3 +39,10 @@ class Bill(UserOwnedMixin, TimestampMixin, Base):
     autopay: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     category: Mapped[str | None] = mapped_column(String(60))
     notes: Mapped[str | None] = mapped_column(String(500))
+
+    # When set, marking the bill paid auto-creates a BudgetTransaction
+    # against this category. ON DELETE SET NULL so deleting a budget
+    # category leaves the bill intact, just without an auto-target.
+    default_budget_category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("budget_categories.id", ondelete="SET NULL"), index=True
+    )

@@ -62,7 +62,27 @@ def home() -> str:
         "networth/home.html",
         breakdown=breakdown,
         trend_series=trend_series,
+        snapshots=list(reversed(snapshots)),
     )
+
+
+@bp.route("/snapshots/<int:snapshot_id>/delete", methods=["POST"])
+@login_required
+def delete_snapshot(snapshot_id: int) -> str:
+    """Delete a single NetWorthSnapshot row.
+
+    404s if the snapshot doesn't belong to the current user — we 404 not
+    403 so we don't confirm the existence of someone else's snapshot id.
+    """
+    snap = db.session.execute(
+        current_user_query(NetWorthSnapshot).where(NetWorthSnapshot.id == snapshot_id)
+    ).scalar_one_or_none()
+    if snap is None:
+        abort(404)
+    db.session.delete(snap)
+    db.session.commit()
+    flash("Snapshot deleted.", "info")
+    return redirect(url_for("networth.home"))
 
 
 @bp.route("/snapshot", methods=["POST"])

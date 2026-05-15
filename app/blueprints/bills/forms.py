@@ -17,4 +17,9 @@ class BillForm(FlaskForm):
     end_date = DateField("End date", validators=[Optional()])
     autopay = BooleanField("Autopay")
     category = StringField("Category", validators=[Optional(), Length(max=60)])
+    default_budget_category_id = SelectField(
+        "Default budget category (auto-creates a transaction on mark-paid)",
+        coerce=lambda v: int(v) if v else None,
+        validators=[Optional()],
+    )
     notes = TextAreaField("Notes", validators=[Optional(), Length(max=500)])

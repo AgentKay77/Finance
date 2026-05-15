@@ -6,7 +6,7 @@
 //
 // Bump CACHE_VERSION to force clients to refresh cached assets.
 
-const CACHE_VERSION = "v2-2026-05-08";
+const CACHE_VERSION = "v3-2026-05-15";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 

@@ -73,6 +73,7 @@ def create_app(config: type[BaseConfig] | str | None = None) -> Flask:
     # Blueprints
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.bills import bp as bills_bp
+    from app.blueprints.budget import bp as budget_bp
     from app.blueprints.dashboard import bp as dashboard_bp
     from app.blueprints.goals import bp as goals_bp
     from app.blueprints.loans import bp as loans_bp
@@ -86,6 +87,7 @@ def create_app(config: type[BaseConfig] | str | None = None) -> Flask:
     app.register_blueprint(loans_bp)
     app.register_blueprint(networth_bp)
     app.register_blueprint(bills_bp)
+    app.register_blueprint(budget_bp)
     app.register_blueprint(whatif_bp)
     app.register_blueprint(goals_bp)
     app.register_blueprint(subscriptions_bp)

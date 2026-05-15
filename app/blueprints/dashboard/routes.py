@@ -15,11 +15,13 @@ from app.extensions import db
 from app.models import (
     Asset,
     Bill,
+    BudgetCategory,
     Loan,
     LoanStatus,
     NetWorthSnapshot,
     SavingsGoal,
     Subscription,
+    current_user_id,
     current_user_query,
 )
 from app.services.amortization import (
@@ -27,6 +29,7 @@ from app.services.amortization import (
     build_schedule,
     predict_balance_at,
 )
+from app.services.budget import rollup_month
 from app.services.networth import compute_breakdown
 
 bp = Blueprint("dashboard", __name__)
@@ -96,6 +99,38 @@ def home() -> str:
         .all()
     )
 
+    # Budget rollup for the dashboard tile.
+    user_id = current_user_id()
+    cats = (
+        db.session.execute(
+            current_user_query(BudgetCategory).order_by(
+                BudgetCategory.sort_order, BudgetCategory.name
+            )
+        )
+        .scalars()
+        .all()
+    )
+    from sqlalchemy import extract, select
+
+    from app.models import BudgetTransaction
+
+    txns = (
+        db.session.execute(
+            select(BudgetTransaction).where(
+                BudgetTransaction.user_id == user_id,
+                extract("year", BudgetTransaction.date) == today.year,
+                extract("month", BudgetTransaction.date) == today.month,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    budget_summary = rollup_month(
+        [(c.id, c.name, c.color, c.sort_order, Decimal(c.monthly_limit)) for c in cats],
+        [(t.category_id, Decimal(t.amount), t.date) for t in txns],
+        today,
+    )
+
     return render_template(
         "dashboard/home.html",
         loan_count=len(loans),
@@ -105,6 +140,8 @@ def home() -> str:
         bills_due_soon=bills_due_soon,
         goal_count=len(goals),
         sub_count=len(subs),
+        budget_summary=budget_summary,
+        budget_has_categories=bool(cats),
     )
 
 

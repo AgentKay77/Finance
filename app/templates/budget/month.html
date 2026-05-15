@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Budget {{ year }}-{{ '%02d'|format(month) }} · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Budget — {{ '{:04d}-{:02d}'.format(year, month) }}</h1>
+    <a href="{{ url_for('budget.home') }}">Current month →</a>
+  </div>
+  <div class="stat-grid">
+    <div class="stat"><span>Total spent</span><strong>${{ '{:,.2f}'.format(summary.total_spent) }}</strong></div>
+    <div class="stat"><span>Total limit</span><strong>${{ '{:,.2f}'.format(summary.total_limit) }}</strong></div>
+    <div class="stat"><span>Over budget</span><strong>{{ summary.categories_over_pace }}</strong></div>
+  </div>
+  <ul class="goal-list">
+    {% for cat in summary.categories %}
+      <li class="card">
+        <h2 style="border-left: 6px solid {{ cat.color }}; padding-left: 0.5rem;">{{ cat.name }}</h2>
+        <p class="muted">
+          ${{ '{:,.2f}'.format(cat.spent) }} of ${{ '{:,.2f}'.format(cat.monthly_limit) }} ({{ cat.percent_spent }}%)
+        </p>
+        <div class="progress"><span style="width: {{ '%.1f' % (100 if cat.percent_spent > 100 else cat.percent_spent) }}%; background: {{ cat.color }};"></span></div>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
