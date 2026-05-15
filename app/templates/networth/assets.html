@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Assets · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Assets</h1>
+    <a class="btn btn--primary" href="{{ url_for('networth.new_asset') }}">+ New asset</a>
+  </div>
+  {% if not assets %}
+    <p class="muted">No assets yet.</p>
+  {% else %}
+    <table class="schedule">
+      <thead><tr><th>Name</th><th>Type</th><th>Value</th><th>As of</th><th></th></tr></thead>
+      <tbody>
+        {% for a in assets %}
+          <tr>
+            <td>{{ a.name }}</td>
+            <td>{{ a.asset_type.value }}</td>
+            <td>${{ '{:,.2f}'.format(a.current_value) }}</td>
+            <td>{{ a.as_of_date }}</td>
+            <td><a href="{{ url_for('networth.edit_asset', asset_id=a.id) }}">Edit</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  <p><a href="{{ url_for('networth.home') }}">← Back to net worth</a></p>
+</section>
+{% endblock %}

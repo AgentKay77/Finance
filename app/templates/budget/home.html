@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Budget · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Budget — {{ '{:04d}-{:02d}'.format(summary.year, summary.month) }}</h1>
+    <div>
+      <a class="btn" href="{{ url_for('budget.list_transactions') }}">Transactions</a>
+      <a class="btn" href="{{ url_for('budget.list_categories') }}">Categories</a>
+    </div>
+  </div>
+
+  {% if not any_cats %}
+    <p class="muted">No categories yet. <a href="{{ url_for('budget.new_category') }}">Create one</a> to get started.</p>
+  {% else %}
+    <div class="stat-grid">
+      <div class="stat">
+        <span>Spent / limit</span>
+        <strong>${{ '{:,.2f}'.format(summary.total_spent) }} / ${{ '{:,.2f}'.format(summary.total_limit) }}</strong>
+      </div>
+      <div class="stat">
+        <span>Day {{ today.day }} of {{ summary.percent_of_month_elapsed }}% elapsed</span>
+        <strong>{{ summary.percent_of_month_elapsed }}%</strong>
+      </div>
+      <div class="stat">
+        <span>Categories over pace</span>
+        <strong class="status-{{ 'red' if summary.categories_over_pace >= 3 else 'yellow' if summary.categories_over_pace >= 1 else 'green' }}">
+          {{ summary.categories_over_pace }}
+        </strong>
+      </div>
+    </div>
+
+    <ul class="goal-list">
+      {% for cat in summary.categories %}
+        {% set pct_clamped = 100 if cat.percent_spent > 100 else cat.percent_spent %}
+        <li class="card">
+          <div class="row-between">
+            <div>
+              <h2 style="border-left: 6px solid {{ cat.color }}; padding-left: 0.5rem;">{{ cat.name }}</h2>
+              <p class="muted">
+                ${{ '{:,.2f}'.format(cat.spent) }} of ${{ '{:,.2f}'.format(cat.monthly_limit) }}
+                ({{ cat.percent_spent }}%)
+                <span class="status-badge status-{{ 'green' if cat.on_pace else 'yellow' }}">
+                  {{ 'on pace' if cat.on_pace else 'over pace' }}
+                </span>
+              </p>
+            </div>
+            <a href="{{ url_for('budget.edit_category', category_id=cat.category_id) }}">Edit</a>
+          </div>
+          <div class="progress"><span style="width: {{ '%.1f' % pct_clamped }}%; background: {{ cat.color }};"></span></div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

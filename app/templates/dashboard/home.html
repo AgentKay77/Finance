@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <h1>Welcome, {{ current_user.display_name }}</h1>
+
+  <ul class="module-grid">
+    <li class="module-tile">
+      <a href="{{ url_for('loans.list_loans') }}"><h2>Loans</h2></a>
+      <p>{{ loan_count }} active · ${{ '{:,.2f}'.format(loan_total) }} owed</p>
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('networth.home') }}"><h2>Net worth</h2></a>
+      <p>${{ '{:,.2f}'.format(net_worth) }}{% if last_snapshot %} · last snapshot {{ last_snapshot.snapshot_date }}{% endif %}</p>
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('bills.list_bills') }}"><h2>Bills</h2></a>
+      <p>{{ bills_due_soon|length }} due in next 30 days</p>
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('budget.home') }}"><h2>Budget</h2></a>
+      {% if budget_has_categories %}
+        <p>${{ '{:,.2f}'.format(budget_summary.total_spent) }} of ${{ '{:,.2f}'.format(budget_summary.total_limit) }} this month</p>
+        <p>
+          <span class="status-badge status-{{ 'red' if budget_summary.categories_over_pace >= 3 else 'yellow' if budget_summary.categories_over_pace >= 1 else 'green' }}">
+            {{ budget_summary.categories_over_pace }} over pace
+          </span>
+        </p>
+      {% else %}
+        <p>Set up categories to track spending.</p>
+      {% endif %}
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('whatif.index') }}"><h2>Payoff what-if</h2></a>
+      <p>Model extra payments and refis</p>
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('goals.list_goals') }}"><h2>Goals</h2></a>
+      <p>{{ goal_count }} tracked</p>
+    </li>
+    <li class="module-tile">
+      <a href="{{ url_for('subscriptions.list_subs') }}"><h2>Subscriptions</h2></a>
+      <p>{{ sub_count }} tracked</p>
+    </li>
+  </ul>
+
+  {% if bills_due_soon %}
+    <h2>Coming up</h2>
+    <ul class="line-list">
+      {% for bill in bills_due_soon %}
+        <li>
+          <span>{{ bill.next_due_date }} · {{ bill.name }}</span>
+          <span>${{ '{:,.2f}'.format(bill.amount) }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

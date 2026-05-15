@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Loans · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Loans</h1>
+    <div>
+      <a class="btn" href="{{ url_for('loans.strategy') }}">Compare strategies</a>
+      <a class="btn btn--primary" href="{{ url_for('loans.new_loan') }}">+ New loan</a>
+    </div>
+  </div>
+
+  {% if not cards %}
+    <p class="muted">No loans yet. Create one to get started.</p>
+  {% else %}
+    <ul class="loan-grid">
+      {% for c in cards %}
+        <li class="card loan-card loan-card--{{ c.severity }}">
+          <a href="{{ url_for('loans.detail', loan_id=c.loan.id) }}" class="loan-card-link">
+            <h2>{{ c.loan.name }}</h2>
+            <p class="muted small">{{ c.loan.lender or '' }} · {{ c.loan.loan_type.value }}</p>
+            <p class="balance">${{ '{:,.2f}'.format(c.current_balance) }}</p>
+            <p class="muted small">
+              {{ c.loan.payment_amount }} on day {{ c.loan.payment_day_of_month }} ·
+              APR {{ '{:.3%}'.format(c.loan.current_rate) }}
+            </p>
+            <span class="status-badge status-{{ c.severity }}">{{ c.severity }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

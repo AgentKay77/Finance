@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Create account · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <h1>Create account</h1>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <label>
+      <span>Display name</span>
+      {{ form.display_name(required=True) }}
+      {% for err in form.display_name.errors %}<small class="error">{{ err }}</small>{% endfor %}
+    </label>
+    <label>
+      <span>Email</span>
+      {{ form.email(autocomplete="username", required=True) }}
+      {% for err in form.email.errors %}<small class="error">{{ err }}</small>{% endfor %}
+    </label>
+    <label>
+      <span>Password</span>
+      {{ form.password(autocomplete="new-password", required=True) }}
+      {% for err in form.password.errors %}<small class="error">{{ err }}</small>{% endfor %}
+    </label>
+    <label>
+      <span>Confirm password</span>
+      {{ form.confirm(autocomplete="new-password", required=True) }}
+      {% for err in form.confirm.errors %}<small class="error">{{ err }}</small>{% endfor %}
+    </label>
+    <button type="submit" class="btn btn--primary">Create account</button>
+  </form>
+  <p class="muted">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>.</p>
+</section>
+{% endblock %}

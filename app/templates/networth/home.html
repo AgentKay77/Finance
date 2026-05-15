@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Net worth · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="row-between">
+    <h1>Net worth</h1>
+    <div>
+      <a class="btn" href="{{ url_for('networth.list_assets') }}">Manage assets</a>
+      <form method="post" action="{{ url_for('networth.snapshot') }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn--primary">Take snapshot</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><span>Assets</span><strong>${{ '{:,.2f}'.format(breakdown.assets_total) }}</strong></div>
+    <div class="stat"><span>Liabilities</span><strong>${{ '{:,.2f}'.format(breakdown.liabilities_total) }}</strong></div>
+    <div class="stat stat--big"><span>Net worth</span><strong>${{ '{:,.2f}'.format(breakdown.net_worth) }}</strong></div>
+  </div>
+
+  <h2>Trend</h2>
+  {% if trend_series %}
+    <canvas id="networth-chart" height="120" data-trend='{{ trend_series|tojson }}'></canvas>
+  {% else %}
+    <p class="muted">Take a snapshot to start the trend chart.</p>
+  {% endif %}
+
+  {% if snapshots %}
+    <h2>Snapshots</h2>
+    <table class="schedule">
+      <thead><tr><th>Date</th><th>Assets</th><th>Liabilities</th><th>Net worth</th><th></th></tr></thead>
+      <tbody>
+        {% for snap in snapshots %}
+          <tr>
+            <td>{{ snap.snapshot_date }}</td>
+            <td>${{ '{:,.2f}'.format(snap.assets_total) }}</td>
+            <td>${{ '{:,.2f}'.format(snap.liabilities_total) }}</td>
+            <td>${{ '{:,.2f}'.format(snap.net_worth) }}</td>
+            <td>
+              <form method="post"
+                    action="{{ url_for('networth.delete_snapshot', snapshot_id=snap.id) }}"
+                    class="inline-form"
+                    onsubmit="return confirm('Delete this snapshot?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="link-button" aria-label="Delete snapshot">🗑</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <div class="two-col">
+    <section>
+      <h3>Assets</h3>
+      <ul class="line-list">
+        {% for label, amount in breakdown.by_asset %}
+          <li>{{ label }}<span>${{ '{:,.2f}'.format(amount) }}</span></li>
+        {% else %}
+          <li class="muted">No assets recorded.</li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section>
+      <h3>Liabilities</h3>
+      <ul class="line-list">
+        {% for label, amount in breakdown.by_liability %}
+          <li>{{ label }}<span>${{ '{:,.2f}'.format(amount) }}</span></li>
+        {% else %}
+          <li class="muted">No liabilities tracked.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+{% endblock %}

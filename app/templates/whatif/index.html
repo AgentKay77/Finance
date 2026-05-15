@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Payoff what-if · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <h1>Payoff what-if</h1>
+  {% if not loans %}
+    <p class="muted">Add a loan first.</p>
+  {% else %}
+    <p class="muted">Pick a loan to model scenarios against:</p>
+    <ul class="line-list">
+      {% for loan in loans %}
+        <li>
+          <a href="{{ url_for('whatif.scenario', loan_id=loan.id) }}">{{ loan.name }}</a>
+          <span>{{ loan.loan_type.value }} · {{ '{:.3%}'.format(loan.current_rate) }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

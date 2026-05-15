@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Log balance · {{ loan.name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Log balance for {{ loan.name }}</h1>
+  <form method="post" class="form-grid">
+    {{ form.hidden_tag() }}
+    {% for field in [form.as_of_date, form.balance, form.notes] %}
+      <label>
+        <span>{{ field.label.text }}</span>
+        {{ field() }}
+      </label>
+    {% endfor %}
+    <div class="full row-between">
+      <a href="{{ url_for('loans.detail', loan_id=loan.id) }}">Cancel</a>
+      <button type="submit" class="btn btn--primary">Log</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

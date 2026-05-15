@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Cashflow · {{ app_name }}{% endblock %}
+{% block content %}
+<section>
+  <h1>Cashflow — next 6 months</h1>
+  {% if not months %}
+    <p class="muted">Add bills or loans to see cashflow.</p>
+  {% else %}
+    {% for m in months %}
+      <section class="card cashflow-month">
+        <header class="row-between">
+          <h2>{{ '{:04d}-{:02d}'.format(m.year, m.month) }}</h2>
+          <strong>${{ '{:,.2f}'.format(m.total) }}</strong>
+        </header>
+        <ul class="line-list">
+          {% for due, name, amount, kind in m['items'] %}
+            <li>
+              <span>{{ due }} · {{ name }}{% if kind == 'loan' %} <small class="muted">(loan)</small>{% endif %}</span>
+              <span>${{ '{:,.2f}'.format(amount) }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endfor %}
+  {% endif %}
+  <p><a href="{{ url_for('bills.list_bills') }}">← Back to bills</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+[Unit]
+Description=Finance Hub PWA (Flask + Gunicorn)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/finance-hub
+EnvironmentFile=/home/pi/finance-hub/.env
+ExecStart=/home/pi/finance-hub/.venv/bin/gunicorn -c gunicorn.conf.py wsgi:app
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=finance-hub
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/pi/finance-hub/instance
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
